@@ -104,7 +104,7 @@ spec:
   - extract:
       conversionStrategy: Default
       decodingStrategy: None
-      key: openai-api-key
+      key: caloriesai
       metadataPolicy: None
   refreshInterval: 1h0m0s
   secretStoreRef:
