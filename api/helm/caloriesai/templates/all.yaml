@@ -104,7 +104,7 @@ spec:
   - extract:
       conversionStrategy: Default
       decodingStrategy: None
-      key: caloriesai
+      key: {{ .Release.Name }}
       metadataPolicy: None
   refreshInterval: 1h0m0s
   secretStoreRef:
@@ -113,7 +113,7 @@ spec:
   target:
     creationPolicy: Owner
     deletionPolicy: Retain
-    name: {{ .Release.Name }}
+    name: {{ .Release.Name }}-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
