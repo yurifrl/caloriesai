@@ -82,4 +82,4 @@ jobs:
           version=$(helm show chart "api/helm/caloriesai" | grep '^version:' | cut -d' ' -f2)
           
           # Push to GHCR
-          helm push caloriesai-${version}.tgz "oci://ghcr.io/${{ github.repository }}/charts"
+          helm push caloriesai-${version}.tgz "oci://ghcr.io/yurifrl/charts"
