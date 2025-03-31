@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# This app basic requirements 
+
+1. User uploads multiple images in one request
+2. Images are stored temporarily (Redis)
+3. Images are queued for processing by LLM
+4. Processing extracts information about each image
+5. Results are displayed as a stack of images with their analysis
+6. User can create multiple entries, each with its own set of images
+
+That's it - an image analysis app that processes batches of images and presents the results.

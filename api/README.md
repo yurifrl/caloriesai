@@ -2,14 +2,14 @@
 
 ## TODO
 
-- [ ] API setup with image upload endpoint (multiple files)
-- [ ] Redis storage for images and entry metadata
-- [ ] Queue system for processing
-- [ ] Basic worker to process images (placeholder LLM integration)
-- [ ] API endpoints to retrieve entry/image status
-- [ ] Frontend image stack display with status
-- [ ] Complete LLM integration for actual analysis
-- [ ] Polish UI/UX for final presentation
+1. [x] API setup with image upload endpoint (multiple files)
+2. [x] Redis storage for images and entry metadata
+3. [x] Queue system for processing
+4. [x] Basic worker to process images (placeholder LLM integration)
+5. [ ] API endpoints to retrieve entry/image status
+6. [ ] Frontend image stack display with status
+7. [ ] Complete LLM integration for actual analysis
+8. [ ] Polish UI/UX for final presentation
 
 ## API Usage with curl
 
@@ -50,3 +50,10 @@ Response:
 ```
 
 Note: Replace `{entryId}` with the actual entry ID returned from the create entry endpoint.
+
+## Deployment with Helm
+
+```bash
+# Deploy the API and worker
+helm upgrade --install caloriesai ./helm/caloriesai --set openai.apiKey=sk_your_api_key
+```

@@ -15,6 +15,7 @@ spec:
       containers:
       - name: {{ .Release.Name }}
         image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+        command: ["npm", "run", "start"]
         ports:
         - containerPort: {{ .Values.service.port }}
         livenessProbe:
@@ -52,7 +53,10 @@ spec:
   gateways:
     - istio-system/cloudflare
   hosts:
-    - yagp.monaddaydream.com
+    - caloriesai.monaddaydream.com
+    - caloriesai.syscd.live
+    - caloriesai.syscd.tech
+    - caloriesai.syscd.dev
   http:
     - route:
         - destination:
@@ -90,3 +94,50 @@ spec:
     targetPort: 6379
   selector:
     app: {{ .Release.Name }}-redis
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: {{ .Release.Name }}-secrets
+spec:
+  dataFrom:
+  - extract:
+      conversionStrategy: Default
+      decodingStrategy: None
+      key: openai-api-key
+      metadataPolicy: None
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: {{ .Release.Name }}-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-worker
+    spec:
+      containers:
+      - name: worker
+        image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+        command: ["npm", "run", "worker"]
+        env:
+        - name: REDIS_URL
+          value: redis://{{ .Release.Name }}-redis:6379
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secrets
+              key: openai-api-key
