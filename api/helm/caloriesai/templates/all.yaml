@@ -113,7 +113,7 @@ spec:
   target:
     creationPolicy: Owner
     deletionPolicy: Retain
-    name: {{ .Release.Name }}-secrets
+    name: {{ .Release.Name }}
 ---
 apiVersion: apps/v1
 kind: Deployment
