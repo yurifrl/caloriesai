@@ -75,10 +75,10 @@ jobs:
       - name: Package and Push Charts
         run: |
           # Package the chart
-          helm package "api/helm/${{ github.repository }}"
+          helm package "api/helm/caloriesai"
           
           # Get the version from Chart.yaml
-          version=$(helm show chart "api/helm/${{ github.repository }}" | grep '^version:' | cut -d' ' -f2)
+          version=$(helm show chart "api/helm/caloriesai" | grep '^version:' | cut -d' ' -f2)
           
           # Push to GHCR
-          helm push ${version}.tgz "oci://ghcr.io/${{ github.repository }}/charts"
+          helm push caloriesai-${version}.tgz "oci://ghcr.io/${{ github.repository }}/charts"
