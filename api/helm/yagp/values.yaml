@@ -1,0 +1,6 @@
+image:
+  repository: ghcr.io/yurifrl/caloriesai
+  tag: "" # Default to Chart.yaml appVersion
+  
+service:
+  port: 3000 
