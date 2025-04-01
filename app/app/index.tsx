@@ -4,6 +4,7 @@ import { Container } from '~/components/Container';
 import { YStack, XStack, Text, Separator, Sheet } from 'tamagui';
 import { useEffect, useMemo, useState } from 'react';
 import { api, Entry, Image } from '~/utils/api';
+import { RefreshControl, ScrollView } from 'react-native';
 
 const ROUTES = {
   CAMERA: '/camera' as const,
@@ -16,6 +17,7 @@ export default function Home() {
   const [showOptions, setShowOptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   
   useEffect(() => {
     loadEntries();
@@ -58,12 +60,22 @@ export default function Home() {
   const handleAddFood = async (route: RouteType) => {
     setIsLoading(true);
     try {
-      const entry = await api.createEntry();
-      console.log('Created entry:', entry);
+      // Check if there's an existing entry ID
+      let entryId = await api.getCurrentEntryId();
+      
+      // If no entry ID exists, create a new entry
+      if (!entryId) {
+        const entry = await api.createEntry();
+        entryId = entry.id;
+        console.log('Created new entry:', entry);
+      } else {
+        console.log('Using existing entry:', entryId);
+      }
+      
       setShowOptions(false);
       router.push(route);
     } catch (error) {
-      console.error('Failed to create entry:', error);
+      console.error('Failed to create/use entry:', error);
     } finally {
       setIsLoading(false);
     }
@@ -77,38 +89,53 @@ export default function Home() {
     refreshOnFocus();
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadEntries();
+    setRefreshing(false);
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: 'Home' }} />
       <Container>
-        <YStack flex={1} justifyContent="space-between" pb="$4">
-          <YStack>
-            <Text fontSize="$8" fontWeight="bold" pb="$4">Total: {totalCalories} kcal</Text>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <YStack flex={1} justifyContent="space-between" pb="$4">
             <YStack>
-              {foodItems.length > 0 ? (
-                foodItems.map((item, index) => (
-                  <YStack key={item.id}>
-                    <XStack justifyContent="space-between" p="$2">
-                      <Text>{item.name}</Text>
-                      <Text>{item.calories} kcal</Text>
-                    </XStack>
-                    {index < foodItems.length - 1 && <Separator />}
-                  </YStack>
-                ))
-              ) : (
-                <Text p="$2" textAlign="center">No food entries yet</Text>
-              )}
+              <Text fontSize="$8" fontWeight="bold" pb="$4">Total: {totalCalories} kcal</Text>
+              <YStack>
+                {foodItems.length > 0 ? (
+                  foodItems.map((item, index) => (
+                    <YStack key={item.id}>
+                      <XStack justifyContent="space-between" p="$2">
+                        <Text>{item.name}</Text>
+                        <Text>{item.calories} kcal</Text>
+                      </XStack>
+                      {index < foodItems.length - 1 && <Separator />}
+                    </YStack>
+                  ))
+                ) : (
+                  <Text p="$2" textAlign="center">No food entries yet</Text>
+                )}
+              </YStack>
             </YStack>
           </YStack>
-          <Button
-            size="$6"
-            circular
-            backgroundColor="$blue10"
-            title="+"
-            alignSelf="center"
-            onPress={() => setShowOptions(true)}
-          />
-        </YStack>
+        </ScrollView>
+        <Button
+          size="$6"
+          circular
+          backgroundColor="$blue10"
+          title="+"
+          alignSelf="center"
+          position="absolute"
+          bottom="$4"
+          onPress={() => setShowOptions(true)}
+        />
       </Container>
       
       <Sheet
