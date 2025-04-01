@@ -53,7 +53,7 @@ async function processQueue() {
         
         // Send to OpenAI for analysis
         const response = await openai.chat.completions.create({
-          model: "gpt-4-vision-preview",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "user",

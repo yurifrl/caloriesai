@@ -7,6 +7,8 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
+    volumes:
+      - .:/app
 
   worker:
     build: .
@@ -15,6 +17,10 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
+    volumes:
+      - .:/app
 
   redis:
     image: redis:alpine

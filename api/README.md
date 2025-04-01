@@ -15,7 +15,10 @@
 
 ### Create a New Entry
 ```bash
-curl -X POST http://localhost:3000/entries | jq
+export CALORIESAI_HOST=http://localhost:3000
+curl -X POST $CALORIESAI_HOST/entries | jq
+# or
+export ENTRY_ID=(curl -X POST $CALORIESAI_HOST/entries | jq -r ".id")
 ```
 Response:
 ```json
@@ -24,7 +27,7 @@ Response:
 
 ### Upload Images to an Entry
 ```bash
-curl -X POST http://localhost:3000/entries/{entryId}/images \
+curl -X POST $CALORIESAI_HOST/entries/$ENTRY_ID/images \
   -F "images=@hack/food-images/image1.png" \
   -F "images=@hack/food-images/image2.png" | jq
 ```
@@ -35,7 +38,7 @@ Response:
 
 ### Get Entry Details
 ```bash
-curl -X GET http://localhost:3000/entries/{entryId} | jq
+curl -X GET $CALORIESAI_HOST/entries/$ENTRY_ID | jq
 ```
 Response:
 ```json
@@ -47,13 +50,4 @@ Response:
     {"id":"img2","filename":"image2.jpg","mimetype":"image/jpeg","size":67890,"status":"pending"}
   ]
 }
-```
-
-Note: Replace `{entryId}` with the actual entry ID returned from the create entry endpoint.
-
-## Deployment with Helm
-
-```bash
-# Deploy the API and worker
-helm upgrade --install caloriesai ./helm/caloriesai --set openai.apiKey=sk_your_api_key
 ```

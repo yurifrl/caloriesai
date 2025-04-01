@@ -1,28 +1,81 @@
 import { Stack, Link, router } from 'expo-router';
 import { Button } from '~/components/Button';
 import { Container } from '~/components/Container';
-import { ScreenContent } from '~/components/ScreenContent';
-import { YStack, XStack, Text, Separator } from 'tamagui';
-import { useMemo } from 'react';
+import { YStack, XStack, Text, Separator, Sheet } from 'tamagui';
+import { useEffect, useMemo, useState } from 'react';
+import { api, Entry, Image } from '~/utils/api';
 
-type FoodItem = {
-  id: string;
-  name: string;
-  calories: number;
+const ROUTES = {
+  CAMERA: '/camera' as const,
+  GALLERY: '/gallery' as const,
 };
 
+type RouteType = typeof ROUTES[keyof typeof ROUTES];
+
 export default function Home() {
-  const foodItems = useMemo<FoodItem[]>(() => [
-    { id: '1', name: 'Chicken Breast', calories: 165 },
-    { id: '2', name: 'Brown Rice', calories: 215 },
-    { id: '3', name: 'Greek Yogurt', calories: 130 },
-    { id: '4', name: 'Banana', calories: 105 },
-    { id: '5', name: 'Almonds', calories: 635 },
-  ], []);
+  const [showOptions, setShowOptions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  
+  useEffect(() => {
+    loadEntries();
+  }, []);
+  
+  const loadEntries = async () => {
+    try {
+      setIsLoading(true);
+      const currentEntryId = await api.getCurrentEntryId();
+      
+      if (currentEntryId) {
+        const entry = await api.getEntry(currentEntryId);
+        setEntries([entry]);
+      }
+    } catch (error) {
+      console.error('Failed to load entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const foodItems = useMemo(() => {
+    if (!entries.length) return [];
+    
+    return entries.flatMap(entry => 
+      entry.images?.filter(img => img.status === 'completed' && img.analysis)
+        .map(img => ({
+          id: img.id,
+          name: img.analysis?.foodItems?.join(', ') || 'Unknown food',
+          calories: img.analysis?.calories || 0,
+          entryId: entry.id
+        })) || []
+    );
+  }, [entries]);
 
   const totalCalories = useMemo(() => 
     foodItems.reduce((sum, item) => sum + item.calories, 0)
   , [foodItems]);
+
+  const handleAddFood = async (route: RouteType) => {
+    setIsLoading(true);
+    try {
+      const entry = await api.createEntry();
+      console.log('Created entry:', entry);
+      setShowOptions(false);
+      router.push(route);
+    } catch (error) {
+      console.error('Failed to create entry:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const refreshOnFocus = () => {
+    loadEntries();
+  };
+  
+  useEffect(() => {
+    refreshOnFocus();
+  }, []);
 
   return (
     <>
@@ -32,15 +85,19 @@ export default function Home() {
           <YStack>
             <Text fontSize="$8" fontWeight="bold" pb="$4">Total: {totalCalories} kcal</Text>
             <YStack>
-              {foodItems.map((item, index) => (
-                <YStack key={item.id}>
-                  <XStack justifyContent="space-between" p="$2">
-                    <Text>{item.name}</Text>
-                    <Text>{item.calories} kcal</Text>
-                  </XStack>
-                  {index < foodItems.length - 1 && <Separator />}
-                </YStack>
-              ))}
+              {foodItems.length > 0 ? (
+                foodItems.map((item, index) => (
+                  <YStack key={item.id}>
+                    <XStack justifyContent="space-between" p="$2">
+                      <Text>{item.name}</Text>
+                      <Text>{item.calories} kcal</Text>
+                    </XStack>
+                    {index < foodItems.length - 1 && <Separator />}
+                  </YStack>
+                ))
+              ) : (
+                <Text p="$2" textAlign="center">No food entries yet</Text>
+              )}
             </YStack>
           </YStack>
           <Button
@@ -49,10 +106,34 @@ export default function Home() {
             backgroundColor="$blue10"
             title="+"
             alignSelf="center"
-            onPress={() => router.push('/camera')}
+            onPress={() => setShowOptions(true)}
           />
         </YStack>
       </Container>
+      
+      <Sheet
+        modal
+        open={showOptions}
+        onOpenChange={setShowOptions}
+        snapPoints={[25]}
+        dismissOnSnapToBottom
+      >
+        <Sheet.Overlay />
+        <Sheet.Frame>
+          <YStack p="$4" space="$4">
+            <Button 
+              title="Take Photo" 
+              disabled={isLoading}
+              onPress={() => handleAddFood(ROUTES.CAMERA)}
+            />
+            <Button 
+              title="Choose from Gallery" 
+              disabled={isLoading}
+              onPress={() => handleAddFood(ROUTES.GALLERY)}
+            />
+          </YStack>
+        </Sheet.Frame>
+      </Sheet>
     </>
   );
 }

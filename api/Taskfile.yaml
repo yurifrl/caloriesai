@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  op:
+    cmds:
+      -  op inject -i .env.op -o .env
