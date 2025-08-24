@@ -44,12 +44,19 @@ export default function Home() {
     
     return entries.flatMap(entry => 
       entry.images?.filter(img => img.status === 'completed' && img.analysis)
-        .map(img => ({
-          id: img.id,
-          name: img.analysis?.foodItems?.join(', ') || 'Unknown food',
-          calories: img.analysis?.calories || 0,
-          entryId: entry.id
-        })) || []
+        .map(img => {
+          // Parse the analysis if it's a string
+          const analysis = typeof img.analysis === 'string' 
+            ? JSON.parse(img.analysis) 
+            : img.analysis;
+            
+          return {
+            id: img.id,
+            name: analysis?.foodItems?.join(', ') || 'Unknown food',
+            calories: analysis?.calories || 0,
+            entryId: entry.id
+          };
+        }) || []
     );
   }, [entries]);
 
